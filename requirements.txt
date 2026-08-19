@@ -1,0 +1,8 @@
+# Task 3 audio app + Task 1/4 pipeline
+Flask==3.1.3
+numpy>=1.24
+gunicorn>=21.0        # production server for deploy (Render/Railway)
+
+# NOTE: ffmpeg + ffprobe are also required (system packages, not pip):
+#   macOS:  brew install ffmpeg
+#   Ubuntu: sudo apt-get install -y ffmpeg

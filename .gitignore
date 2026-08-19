@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Generated database (rebuild with: python scripts/merge.py)
+data/consultbae.db
+
+# Uploaded/recorded audio (keep the folder, ignore its contents)
+app/static/recordings/*
+!app/static/recordings/.gitkeep
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.log

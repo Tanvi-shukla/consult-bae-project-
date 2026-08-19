@@ -1,0 +1,11 @@
+gig_id,full_name,email,phone,city,skills,applied_on,pay_per_day
+G-1001,Aarav Sharma,aarav.sharma@gmail.com,+91-98765 43210,Mumbai,"python, data cleaning, sql",03/02/2024,₹1500
+G-1002,Priya Nair,priya.nair@gmail.com,9845012345,Bengaluru,"react, node, web dev",15/01/2024,₹2000
+G-1003,Mohammed Iqbal,m.iqbal@outlook.com,+91 99000 11223,Hyderabad,"n8n, zapier, automation",22/03/2024,1800
+G-1004,Sara D'Souza,sara.dsouza@gmail.com,098200 34567,Mumbai,"excel, data entry",01/04/2024,₹1200
+G-1004,Sara D'Souza,sara.dsouza@gmail.com,098200 34567,Mumbai,"excel, data entry",01/04/2024,₹1200
+G-1005,"Verma, Rohan",rohan.verma@gmial.com,+91-90000-55667,Pune,python; automation; scraping,2024-02-20,₹1600
+G-1006,Neha Gupta,,98111 22334 ext 5,Delhi,"figma, ui, web dev",07/03/2024,₹1750
+G-1007,Dr. Anil Kumar  ,anil.kumar@consultbae.com,+91 98765 00000,Chennai,"ml, python, data",11/02/2024,₹2500
+G-1008,Kavya Reddy,kavya.reddy@gmail.com,9700012345,Hyderabad,"content, seo",28/02/2024,-500
+G-1009,Amit Joshi,shared.family@gmail.com,9820011111,Mumbai,"sales, crm",05/03/2024,₹1400

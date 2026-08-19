@@ -1,0 +1,10 @@
+emp_code,first_name,last_name,mail,mobile,region,tags,created,rate_inr_hr
+EMP007,Aarav,Sharma,AARAV.SHARMA@GMAIL.COM,919876543210,West,python|data|sql,10-Jan-2024,200
+EMP008,Sara,D`Souza,sara.dsouza@gmail.com,+918200034567,West,excel|data-entry,01-Apr-2024,150
+EMP009,Vishnu,Nair,vishnu.nair@gmail.com,9812345678,South,data|python,15-Feb-2024,180
+EMP010,Rohan,,rohan.verma@gmail.com,900005566,West,python|automation,20-Feb-2024,190
+EMP011,Farah,Khan,farah.khan@gmail.com,9898989898,North,content|seo|social,31-Dec-2099,160
+EMP012,Anil,Kumar	,anil.kumar@consultbae.com,'919876500000,South,ml|python|data,11-Feb-2024,300
+EMP013,,,,,,,,
+EMP014,Priya,Nair,priya.nair@gmail.com,9845012345,South,react;node;webdev,05-Jan-2024,220
+EMP015,Karan,Malhotra,karan.malhotra@consultbae.com,9811223344,North,devops|aws|python,18-Mar-2024,260

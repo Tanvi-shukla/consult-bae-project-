@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ConsultBae — Submit Audio</title>
+  <style>
+    :root { --bg:#0f172a; --card:#1e293b; --accent:#38bdf8; --text:#e2e8f0; --muted:#94a3b8; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+           background: var(--bg); color: var(--text); display:flex; min-height:100vh;
+           align-items:center; justify-content:center; padding:24px; }
+    .card { background: var(--card); border-radius:16px; padding:32px; width:100%;
+            max-width:460px; box-shadow:0 10px 40px rgba(0,0,0,.4); }
+    h1 { margin:0 0 4px; font-size:22px; }
+    p.sub { margin:0 0 24px; color: var(--muted); font-size:14px; }
+    label { display:block; font-size:13px; color:var(--muted); margin:16px 0 6px; }
+    input[type=text], input[type=tel] { width:100%; padding:11px 12px; border-radius:9px;
+        border:1px solid #334155; background:#0b1220; color:var(--text); font-size:15px; }
+    .rec-row { display:flex; gap:10px; align-items:center; margin-top:8px; }
+    button { cursor:pointer; border:none; border-radius:9px; font-size:14px; font-weight:600;
+             padding:11px 16px; }
+    .btn-rec { background:#ef4444; color:white; }
+    .btn-rec.recording { background:#334155; }
+    .btn-primary { background: var(--accent); color:#08131e; width:100%; margin-top:24px;
+                   padding:13px; font-size:15px; }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+    audio { width:100%; margin-top:12px; }
+    .divider { text-align:center; color:var(--muted); font-size:12px; margin:18px 0 6px; }
+    .status { font-size:13px; color:var(--accent); margin-top:8px; min-height:18px; }
+    .flash { background:#0b1220; border-left:3px solid var(--accent); padding:10px 12px;
+             border-radius:6px; font-size:13px; margin-bottom:16px; }
+    a.link { color:var(--accent); font-size:13px; text-decoration:none; }
+    .file-label { display:inline-block; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎙️ Audio Submission</h1>
+    <p class="sub">Record a short clip in your browser, or upload an audio file.</p>
+
+    {% with msgs = get_flashed_messages() %}
+      {% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endwith %}
+
+    <form id="form" action="{{ url_for('submit') }}" method="post" enctype="multipart/form-data">
+      <label for="name">Full name</label>
+      <input type="text" id="name" name="name" required placeholder="Aarav Sharma">
+
+      <label for="phone">Phone number</label>
+      <input type="tel" id="phone" name="phone" required placeholder="+91 98765 43210">
+
+      <label>Record audio</label>
+      <div class="rec-row">
+        <button type="button" id="recBtn" class="btn-rec">● Start recording</button>
+        <span id="timer" class="status"></span>
+      </div>
+
+      <div class="divider">— or upload a file —</div>
+      <input type="file" id="fileInput" name="audio_file" accept="audio/*" class="file-label">
+
+      <audio id="preview" controls style="display:none"></audio>
+      <div id="status" class="status"></div>
+
+      <!-- The recorded blob is injected here as a File before submit. -->
+      <input type="file" id="audio" name="audio" style="display:none">
+
+      <button type="submit" id="submitBtn" class="btn-primary" disabled>Submit</button>
+    </form>
+    <div style="margin-top:16px; text-align:center;">
+      <a class="link" href="{{ url_for('submissions') }}">View all submissions →</a>
+    </div>
+  </div>
+
+<script>
+  const recBtn = document.getElementById('recBtn');
+  const timer = document.getElementById('timer');
+  const preview = document.getElementById('preview');
+  const status = document.getElementById('status');
+  const submitBtn = document.getElementById('submitBtn');
+  const audioInput = document.getElementById('audio');
+  const fileInput = document.getElementById('fileInput');
+
+  let mediaRecorder, chunks = [], recording = false, startTs, tick;
+
+  function setReady(msg) { status.textContent = msg; submitBtn.disabled = false; }
+
+  // --- Record in the browser via MediaRecorder ---
+  recBtn.addEventListener('click', async () => {
+    if (!recording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        chunks = [];
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const url = URL.createObjectURL(blob);
+          preview.src = url; preview.style.display = 'block';
+          // Put the recorded blob into the hidden file input so it uploads.
+          const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
+          const dt = new DataTransfer(); dt.items.add(file);
+          audioInput.files = dt.files;
+          fileInput.value = '';               // clear any chosen upload
+          setReady('Recording ready to submit.');
+          stream.getTracks().forEach(t => t.stop());
+        };
+        mediaRecorder.start();
+        recording = true; startTs = Date.now();
+        recBtn.textContent = '■ Stop'; recBtn.classList.add('recording');
+        tick = setInterval(() => {
+          const s = Math.floor((Date.now() - startTs) / 1000);
+          timer.textContent = `● ${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+        }, 250);
+      } catch (err) {
+        status.textContent = 'Microphone blocked: ' + err.message + ' — use file upload instead.';
+      }
+    } else {
+      mediaRecorder.stop(); clearInterval(tick);
+      recording = false; recBtn.textContent = '● Start recording';
+      recBtn.classList.remove('recording'); timer.textContent = '';
+    }
+  });
+
+  // --- Upload path: mirror the chosen file into the submit input ---
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) {
+      audioInput.files = fileInput.files;
+      const url = URL.createObjectURL(fileInput.files[0]);
+      preview.src = url; preview.style.display = 'block';
+      setReady('File ready to submit: ' + fileInput.files[0].name);
+    }
+  });
+</script>
+</body>
+</html>

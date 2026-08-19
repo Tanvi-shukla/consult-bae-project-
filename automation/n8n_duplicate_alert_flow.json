@@ -1,0 +1,141 @@
+{
+  "name": "ConsultBae — New Person Duplicate Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-person",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b1f9a0c2-0001-4a10-9c01-000000000001",
+      "name": "Webhook — New Person In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "consultbae-new-person"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:5000/api/check_duplicate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.body.name }}\",\n  \"email\": \"{{ $json.body.email }}\",\n  \"phone\": \"{{ $json.body.phone }}\"\n}",
+        "options": {}
+      },
+      "id": "b1f9a0c2-0002-4a10-9c01-000000000002",
+      "name": "Check Against Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "cond-is-dup",
+              "leftValue": "={{ $json.is_duplicate }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b1f9a0c2-0003-4a10-9c01-000000000003",
+      "name": "Is Duplicate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a-msg",
+              "name": "text",
+              "type": "string",
+              "value": "=:warning: *Duplicate applicant detected*\nIncoming: {{ $json.query.name }} ({{ $json.query.phone }})\nAlready in DB as *{{ $json.person.full_name }}* (person #{{ $json.person.person_id }}), matched on {{ $json.matched_on }}.\nExisting sources: {{ $json.person.sources }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1f9a0c2-0004-4a10-9c01-000000000004",
+      "name": "Build Alert Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL || 'https://hooks.slack.com/services/REPLACE/WITH/YOUR_WEBHOOK' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.text) }}\n}",
+        "options": {}
+      },
+      "id": "b1f9a0c2-0005-4a10-9c01-000000000005",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 200],
+      "notes": "Set SLACK_WEBHOOK_URL as an env var, or paste an Incoming Webhook URL. In the demo video this posts to a real Slack channel."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"duplicate\",\n  \"matched_on\": \"{{ $('Is Duplicate?').item.json.matched_on }}\",\n  \"existing_person_id\": {{ $('Is Duplicate?').item.json.person.person_id }}\n}",
+        "options": {}
+      },
+      "id": "b1f9a0c2-0006-4a10-9c01-000000000006",
+      "name": "Respond — Duplicate",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1400, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"new\",\n  \"message\": \"No match found — safe to add as a new person.\"\n}",
+        "options": {}
+      },
+      "id": "b1f9a0c2-0007-4a10-9c01-000000000007",
+      "name": "Respond — New Person",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 420]
+    }
+  ],
+  "connections": {
+    "Webhook — New Person In": {
+      "main": [[{ "node": "Check Against Database", "type": "main", "index": 0 }]]
+    },
+    "Check Against Database": {
+      "main": [[{ "node": "Is Duplicate?", "type": "main", "index": 0 }]]
+    },
+    "Is Duplicate?": {
+      "main": [
+        [{ "node": "Build Alert Message", "type": "main", "index": 0 }],
+        [{ "node": "Respond — New Person", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Alert Message": {
+      "main": [[{ "node": "Send Slack Alert", "type": "main", "index": 0 }]]
+    },
+    "Send Slack Alert": {
+      "main": [[{ "node": "Respond — Duplicate", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "consultbae-dup-alert-v1",
+  "meta": { "templateId": "consultbae-assignment-task2" },
+  "tags": [{ "name": "consultbae" }]
+}
